@@ -22,20 +22,19 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
-    //在controller层前执行
+    //在 controller 层前执行
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        //从request中获取session
+   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        //从 request 中获取 session
         //HttpSession session = request.getSession();
-        //从session获取用户
+        //从 session 获取用户
         //Object user = session.getAttribute("user");
 
-        //从redis中获取用户信息
-        String token = request.getHeader("authorization");//获取token
+        //从 redis 中获取用户信息
+        String token = request.getHeader("authorization");//获取 token
         if (StrUtil.isBlank(token)) {
-            //不存在拦截，响应401
-            response.setStatus(401);
-            return false;
+            //没有 token，直接放行，由第二层拦截器判断是否需要登录
+           return true;
         }
 
         String tokenKey = RedisConstants.LOGIN_USER_KEY + token;
@@ -43,21 +42,20 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
 
         //判断用户是否存在
         if (userMap.isEmpty()) {
-            //不存在，响应401
-            response.setStatus(401);
-            return false;
+            //token 无效，直接放行，由第二层拦截器判断是否需要登录
+           return true;
         }
 
-        //将hash转换为UserDTO
+        //将 hash 转换为 UserDTO
         UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
 
         //保存用户的当前线程
         UserHolder.saveUser(userDTO);
 
-        //刷新token有效期
+        //刷新 token 有效期
         stringRedisTemplate.expire(tokenKey, RedisConstants.LOGIN_USER_TTL, TimeUnit.MINUTES);
         //放行
-        return true;
+       return true;
     }
 
     //在渲染后执行

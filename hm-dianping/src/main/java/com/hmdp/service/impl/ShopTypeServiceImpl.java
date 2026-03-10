@@ -51,7 +51,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
             return Result.ok("店铺类型未找到！");
         }
         //查询到则存入redis中
-        stringRedisTemplate.opsForValue().set(CACHE_SHOP_TYPE_KEY, StrUtil.toString(typeList));
+        stringRedisTemplate.opsForValue().set(CACHE_SHOP_TYPE_KEY, JSONUtil.toJsonStr(typeList));
         //返回
         return Result.ok(typeList);
     }
